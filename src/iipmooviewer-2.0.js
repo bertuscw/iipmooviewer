@@ -151,6 +151,9 @@ var IIPMooViewer = new Class({
       case 'djatoka':
         this.protocol = new Protocols.Djatoka();
 	break;
+      case 'topview':
+        this.protocol = new Protocols.Topview();
+        break;
       default:
 	this.protocol = new Protocols.IIP();
     }
@@ -1778,4 +1781,6 @@ else Browser.buggy = false;
 
 /* Setup our list of protocol objects
  */
-var Protocols = {};
+if(typeof Protocols === 'undefined') {
+    Protocols = {};
+}
