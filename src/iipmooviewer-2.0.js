@@ -141,21 +141,22 @@ var IIPMooViewer = new Class({
     this.prefix = options.prefix || 'images/';
 
     // Set up our protocol handler
-    switch( options.protocol ){
-      case 'zoomify':
-	this.protocol = new Protocols.Zoomify();
-	break;
-      case 'deepzoom':
-	this.protocol = new Protocols.DeepZoom();
-	break;
-      case 'djatoka':
-        this.protocol = new Protocols.Djatoka();
-	break;
-      case 'topview':
-        this.protocol = new Protocols.Topview();
-        break;
-      default:
-	this.protocol = new Protocols.IIP();
+    if(options.protocol && !instanceOf(options.protocol, String)) {
+        this.protocol = options.protocol;
+    } else {
+        switch( options.protocol ){
+        case 'zoomify':
+            this.protocol = new Protocols.Zoomify();
+            break;
+        case 'deepzoom':
+            this.protocol = new Protocols.DeepZoom();
+            break;
+        case 'djatoka':
+            this.protocol = new Protocols.Djatoka();
+            break;
+        default:
+            this.protocol = new Protocols.IIP();
+        }
     }
 
 
