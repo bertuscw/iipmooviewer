@@ -1539,30 +1539,44 @@ var IIPMooViewer = new Class({
     this.images = [{ src:image, sds:"0,90", cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0 } ];
 
     // Send a new AJAX request for the metadata
-    var metadata = new Request({
-      method: 'get',
-      url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
-      onComplete: function(transport){
-	var response = transport || alert( "Error: No response from server " + this.server );
+    if(this.protocol.getMetaData) {
+      this.protocol.getMetaData(function(result) {
+        this.max_size = result.max_size;
+        this.tileSize = result.tileSize;
+        this.num_resolutions = result.num_resolutions;
 
-	// Parse the result
-	var result = this.protocol.parseMetaData( response );
-	this.max_size = result.max_size;
-	this.tileSize = result.tileSize;
-	this.num_resolutions = result.num_resolutions;
+        this.reload();
 
-	this.reload();
+        // Change our navigation image
+        this.container.getElement('div.navcontainer img.navimage').src =
+        this.protocol.getThumbnailURL(this.server, image, this.navWin.w );
+      }.bind(this), this.server, this.images[0].src);
+    } else {
+      var metadata = new Request({
+        method: 'get',
+        url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
+        onComplete: function(transport){
+          var response = transport || alert( "Error: No response from server " + this.server );
 
-	// Change our navigation image
-	this.container.getElement('div.navcontainer img.navimage').src =
-	  this.protocol.getThumbnailURL(this.server, image, this.navWin.w );
+          // Parse the result
+          var result = this.protocol.parseMetaData( response );
+          this.max_size = result.max_size;
+          this.tileSize = result.tileSize;
+          this.num_resolutions = result.num_resolutions;
 
-      }.bind(this),
-	onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
-    } );
+          this.reload();
 
-    // Send the metadata request
-    metadata.send();
+          // Change our navigation image
+          this.container.getElement('div.navcontainer img.navimage').src =
+          this.protocol.getThumbnailURL(this.server, image, this.navWin.w );
+
+        }.bind(this),
+          onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
+      } );
+
+      // Send the metadata request
+      metadata.send();
+    }
   },
 
 
@@ -1579,25 +1593,36 @@ var IIPMooViewer = new Class({
       this.createWindows();
     }
     else{
-      var metadata = new Request({
-	method: 'get',
-	url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
-	onComplete: function(transport){
-	  var response = transport || alert( "Error: No response from server " + this.server );
+      
+      if(this.protocol.getMetaData) {
+        this.protocol.getMetaData(function(result) {
+          this.max_size = result.max_size;
+          this.tileSize = result.tileSize;
+          this.num_resolutions = result.num_resolutions;
 
-	  // Parse the result
-	  var result = this.protocol.parseMetaData( response );
-	  this.max_size = result.max_size;
-	  this.tileSize = result.tileSize;
-	  this.num_resolutions = result.num_resolutions;
+          this.createWindows();
+        }.bind(this), this.server, this.images[0].src);
+      } else {
+        var metadata = new Request({
+          method: 'get',
+          url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
+          onComplete: function(transport){
+            var response = transport || alert( "Error: No response from server " + this.server );
 
-	  this.createWindows();
-        }.bind(this),
-	onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
-      });
+            // Parse the result
+            var result = this.protocol.parseMetaData( response );
+            this.max_size = result.max_size;
+            this.tileSize = result.tileSize;
+            this.num_resolutions = result.num_resolutions;
 
-      // Send the metadata request
-      metadata.send();
+            this.createWindows();
+          }.bind(this),
+          onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
+        });
+        
+        // Send the metadata request
+        metadata.send();
+      }
     }
   },
 
