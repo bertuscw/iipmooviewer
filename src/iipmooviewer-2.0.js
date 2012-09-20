@@ -56,6 +56,64 @@
    Note: Requires mootools version 1.4 or later <http://www.mootools.net>
        : The page MUST have a standard-compliant HTML declaration at the beginning
 
+   Events:
+      onLoad            Fired after the viewer is loaded
+                        Signature: onLoad()
+
+      onZoom            Fired after zoom in, zoom out or zoom to is performed. 
+                        Signature: 
+                          onZoom(resolution)
+                        Arguments: 
+                          1. resolution - (integer) The resolution to which is zoomed
+
+      onZoomIn          Fired after zoom in is performed. 
+                        Signature: 
+                          onZoomIn(resolution)
+                        Arguments: 
+                          1. resolution - (integer) The resolution to which is zoomed
+
+      onZoomOut         Fired after zoom out is performed. 
+                        Signature: 
+                          onZoomOut(resolution)
+                        Arguments: 
+                          1. resolution - (integer) The resolution to which is zoomed
+
+      onRotate          Fired after a rotation is executed
+                        Signature: 
+                          onRotate(degrees)
+                        Arguments: 
+                          1. degrees - (integer) The degrees to which the rotation is made
+
+      onMove            Fired after the image is moved to a particular point
+                        Signature: 
+                          onMove(x, y)
+                        Arguments: 
+                          1. x - (integer) 0 is the leftmost border of the actual image
+                          2. y - (integer) 0 is the topmost border of the actual image
+
+      onFullscreenEnter Fired after entering fullscreen mode
+                        Sinature: onFullscreenEnter()
+
+      onFullscreenExit  Fired after exiting fullscreen
+                        Sinature: onFullscreenExit()
+
+      onNavigationShow  Fired after navigation window is shown. Does not fire on initialization even when the navigation is shown.
+                        Sinature: onNavigationShow()
+
+      onNavigationHide  Fired after navigation window is hidden
+                        Sinature: onNavigationHide()
+
+      onImageChange     Fired after the image was changed. Does not fire on initialization.
+                        Signature: onImageChange(image)
+                        Arguments: 
+                          1. image - (string) The src of the new image
+
+      onResize          Fired after viewer is resized for any reason.
+                        Signature: onResize(width, height)
+                        Arguments: 
+                          1. width - (integer) The new width of the viewer
+                          2. height - (integer) The new height of the viewer
+                        
 */
 
 
@@ -518,6 +576,8 @@ var IIPMooViewer = new Class({
     this.view.rotation = r;
     var angle = 'rotate(' + r + 'deg)';
     this.canvas.setStyle( this.CSSprefix+'transform', angle );
+    
+    this.fireEvent('rotate', r);
   },
 
 
@@ -567,7 +627,12 @@ var IIPMooViewer = new Class({
       else this.container.getElements('div.message').destroy();
       this.reload();
     }
-
+    
+    if (this.fullscreen.isFullscreen) {
+      this.fireEvent('fullscreenenter');
+    } else {
+      this.fireEvent('fullscreenexit');
+    }
   },
 
 
@@ -662,6 +727,8 @@ var IIPMooViewer = new Class({
     if(IIPMooViewer.sync){
       IIPMooViewer.windows(this).each( function(el){ el.moveTo(xmove,ymove); });
     }
+    
+    this.fireEvent('move', [this.view.x, this.view.y]);
   },
 
 
@@ -719,6 +786,8 @@ var IIPMooViewer = new Class({
 
     this.requestImages();
     this.positionZone();
+    
+    this.fireEvent('move', [x, y]);
   },
 
 
@@ -810,7 +879,10 @@ var IIPMooViewer = new Class({
   /* Zoom in by a factor of 2
    */
   zoomIn: function(){
-    if( this.view.res < this.num_resolutions-1 ) this.zoomTo( this.view.res+1 );
+    if( this.view.res < this.num_resolutions-1 ) {
+      this.zoomTo( this.view.res+1 );
+      this.fireEvent('zoomin', this.view.res + 0);
+    }
   },
 
 
@@ -818,7 +890,10 @@ var IIPMooViewer = new Class({
   /* Zoom out by a factor of 2
    */
   zoomOut: function(){
-    if( this.view.res > 0 ) this.zoomTo( this.view.res-1 );
+    if( this.view.res > 0 ) {
+      this.zoomTo( this.view.res-1 );
+      this.fireEvent('zoomout', this.view.res + 0);
+    }
   },
 
 
@@ -852,6 +927,8 @@ var IIPMooViewer = new Class({
       this.view.res = r;
 
       this._zoom();
+      
+      this.fireEvent('zoom', r);
     }
   },
 
@@ -1319,7 +1396,7 @@ var IIPMooViewer = new Class({
 	width: this.navWin.w
       }
     });
-
+    
     // For standalone iphone/ipad the logo gets covered by the status bar
     if( Browser.Platform.ios && window.navigator.standalone ) navcontainer.setStyle( 'top', 20 );
 
@@ -1461,7 +1538,15 @@ var IIPMooViewer = new Class({
     }
 
     navcontainer.makeDraggable( {container:this.container, handle:toolbar} );
-
+    
+    // Attaching onNavigationShow and onNavigationHide events
+    var _this = this;
+    navcontainer.get('reveal').addEvent('show', function () {
+      _this.fireEvent('navigationshow');
+    });
+    navcontainer.get('reveal').addEvent('hide', function () {
+      _this.fireEvent('navigationhide');
+    });
   },
 
 
@@ -1550,6 +1635,8 @@ var IIPMooViewer = new Class({
         // Change our navigation image
         this.container.getElement('div.navcontainer img.navimage').src =
         this.protocol.getThumbnailURL(this.server, image, this.navWin.w );
+      
+        this.fireEvent('imagechange', image);
       }.bind(this), this.server, this.images[0].src);
     } else {
       var metadata = new Request({
@@ -1569,6 +1656,8 @@ var IIPMooViewer = new Class({
           // Change our navigation image
           this.container.getElement('div.navcontainer img.navimage').src =
           this.protocol.getThumbnailURL(this.server, image, this.navWin.w );
+        
+          this.fireEvent('imagechange', image);
 
         }.bind(this),
           onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
@@ -1675,6 +1764,7 @@ var IIPMooViewer = new Class({
     this.positionZone();
     this.constrain();
 
+    this.fireEvent('resize', [this.view.w, this.view.h]);
   },
 
 
