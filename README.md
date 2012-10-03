@@ -116,7 +116,7 @@ Public Functions
 <b>getRegionURL()</b>: If using the default IIP protocol, this functions returns the IIPImage server URL needed to export the region of the image within the view port as a single image. Thus, to export the current view, call this function and use the result as the source of an image. This example exports, when the user presses the "p" key, the view into a new window which can then be saved as a whole image.
 <pre>
     window.addEvent('keypress', function(e){
-	if( e.key == "p" ) window.open(iipmooviewer.getRegionURL());
+      if( e.key == "p" ) window.open(iipmooviewer.getRegionURL());
     });
 </pre>
 
@@ -189,6 +189,26 @@ For example, to send the updated list of annotations back to annotations.php:
 </pre>
 
 
+Synchronized Views
+------------------
+It is possible to synchronize two or more instances of iipmooviewer, so that they will zoom, pan and rotate at the same time. To do this, simply create your viewers and synchronize them together using the IIPMooViewer.synchronize() function, which takes an array of viewer instances. For example:
+
+<pre>
+  // Create viewers
+  var viewer1 = new IIPMooViewer( "viewer1", {
+    image: 'image1.tif'
+  });
+  var viewer2 = new IIPMooViewer( "viewer2", {
+    image: 'image2.tif',
+    showNavWindow: false, // Only show navigation window on first viewer
+    showNavButtons: false
+  });
+
+  // Synchronize our viewers
+  IIPMooViewer.synchronize([viewer2,viewer1]);
+</pre>
+
+
 Events
 ------
 IIPMooViewer fires the 'load' event when it has fully finished loading. To attach to this event, use the addEvent function:
@@ -198,6 +218,26 @@ IIPMooViewer fires the 'load' event when it has fully finished loading. To attac
 	});
 </pre>
 
+
+Protocols
+---------
+IIPMooViewer supports the IIP, Zoomify, Deepzoom and Djatoka protocols. By default it will use IIP, but to use, for example Zoomify, first include the protocol after the other javascript includes as this is not included by default:
+
+<pre>
+  &lt;script type="text/javascript" src="src/protocols/zoomify.js"&gt;&lt;/script&gt;
+</pre>
+
+Protocols such as zoomify don't have a server as such, so set this value to / or to the path prefix for the image. For example, if you have an image with URL /images/zoomify/image1, use:
+
+<pre>
+new IIPMooViewer( "viewer", {
+   server: "/images/zoomify/",
+   image: "image1",
+   protocol: "zoomify"
+});
+</pre>
+
+Note that for Deepzoom, the image name should be name of the .dzi or .xml Deepzoom index file.
 
 Localization
 ------------
