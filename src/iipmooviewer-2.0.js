@@ -1537,14 +1537,14 @@ var IIPMooViewer = new Class({
         });
     }
 
-    navcontainer.makeDraggable( {container:this.container, handle:toolbar} );
+    this.navcontainer.makeDraggable( {container:this.container, handle:toolbar} );
     
     // Attaching onNavigationShow and onNavigationHide events
     var _this = this;
-    navcontainer.get('reveal').addEvent('show', function () {
+    this.navcontainer.get('reveal').addEvent('show', function () {
       _this.fireEvent('navigationshow');
     });
-    navcontainer.get('reveal').addEvent('hide', function () {
+    this.navcontainer.get('reveal').addEvent('hide', function () {
       _this.fireEvent('navigationhide');
     });
   },
