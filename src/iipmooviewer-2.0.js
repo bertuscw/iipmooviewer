@@ -1009,16 +1009,31 @@ var IIPMooViewer = new Class({
 
     // Calculate our list of resolution sizes and the best resolution
     // for our window size
-    this.resolutions = new Array(this.num_resolutions);
-    this.resolutions.push({w:tx,h:ty});
-    this.view.res = 0;
-    for( var i=1; i<this.num_resolutions; i++ ){
-      tx = Math.floor(tx/2);
-      ty = Math.floor(ty/2);
-      this.resolutions.push({w:tx,h:ty});
-      if( tx < this.view.w && ty < this.view.h ) this.view.res++;
+    if (typeOf(this.protocol.getResolutions) == 'function') {
+        // If the protocol provides reolutions - get them from it and do not calculate them here.
+        // Num of resolutions comes also from the protocol but when getMetaData is called.
+        this.resolutions = this.protocol.getResolutions(this.num_resolutions);
+
+        // Calculates which resolution best fits the window.
+        this.view.res = 0;
+        for (var i = 0; i < this.resolutions.length; i ++) {
+            if (this.resolutions[i].w < this.view.w && this.resolutions[i].h < this.view.h) {
+                 this.view.res ++;
+            }
+        }
+        this.view.res -= 1;
+    } else {
+        this.resolutions = new Array(this.num_resolutions);
+        this.resolutions.push({w:tx,h:ty});
+        this.view.res = 0;
+        for( var i=1; i<this.num_resolutions; i++ ){
+          tx = Math.floor(tx/2);
+          ty = Math.floor(ty/2);
+          this.resolutions.push({w:tx,h:ty});
+          if( tx < this.view.w && ty < this.view.h ) this.view.res++;
+        }
+        this.view.res -= 1;
     }
-    this.view.res -= 1;
 
     // Sanity check and watch our for small screen displays causing the res to be negative
     if( this.view.res < 0 ) this.view.res = 0;
