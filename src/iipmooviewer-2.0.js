@@ -906,7 +906,8 @@ var IIPMooViewer = new Class({
 
     if( (r <= this.num_resolutions-1) && (r >= 0) ){
 
-      var factor = Math.pow( 2, r-this.view.res );
+      // Calculates zooming factor by actual difference in resolutions.
+      var factor = this.resolutions[r].w / this.resolutions[this.view.res].w;
 
       // Calculate an offset to take into account the view port size
       // Center if our image width at this resolution is smaller than the view width - only need to do this on zooming in as our
