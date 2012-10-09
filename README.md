@@ -60,7 +60,7 @@ Distribution
 
 Minified files are created with the closer compiler (https://developers.google.com/closure/compiler/) with the following command:
 <pre>
-java -jar /path/to/compiler.jar --js src/iipmooviewer-2.0.js src/protocols/iip.js src/annotations.js src/lang/help.en.js --js_output_file javascript/iipmooviewer-2.0-compressed.js --compilation_level SIMPLE_OPTIMIZATIONS
+java -jar /path/to/compiler.jar --js src/mootools-more-1.4.0.1.js src/iipmooviewer-2.0.js src/protocols/iip.js src/annotations.js src/blending.js src/lang/help.en.js --js_output_file javascript/iipmooviewer-2.0-compressed.js --compilation_level SIMPLE_OPTIMIZATIONS
 </pre>
 
 You can thereby customize your build to include only those components you need. For example, if you require Zoomify or do not require annotation support, simply add or remove these from the build. Make sure, however, that the core iipmooviewer js file is included before the other components. Otherwise, if you prefer not to rebuild, use the default build and add the extra components you want as extra includes.
@@ -250,7 +250,23 @@ For example for Chinese, create lang/help.zh.js and simply include it after the 
   &lt;script type="text/javascript" src="javascript/iipmooviewer-2.0-compressed.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="src/lang/help.zh.js"&gt;&lt;/script&gt;
 </pre>
-  
+
+Image Blending
+--------------
+It's also possible to load several images for comparison and dynamically blend between them to compare. This is useful, for example, for comparing scientific imagery of the same scene or object. Images should be of the same size and registered. The blending component is in src/blending.js, but is built by default into the main compressed iipmooviewer js file in the javascript/ folder. To use, simply load the the viewer as normal with the default image, but use the blend() function to provide a list of all images and text for use in the selection box. For eample:
+
+<pre>
+var iipmooviewer = new IIPMooViewer( "targetframe", {
+  image: 'color.tif',
+  credit: 'Compare scientific images'
+});
+
+iipmooviewer.blend( [ ['color.tif','color'],
+                      ['uv.tif','ultra-violet'],
+                      ['ir.tif','infra-red'],
+                      ['xray.tif','X-ray']
+                    ] );
+</pre>
 
 
 ------------------------------------------------------------------------------------
