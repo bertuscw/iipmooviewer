@@ -198,6 +198,9 @@ var IIPMooViewer = new Class({
 
     this.prefix = options.prefix || 'images/';
 
+    // Rotation options. Rotation step in degrees
+    this.rotationStep = parseInt(options.rotationStep) || 45;
+
     // Set up our protocol handler
     if(options.protocol && !instanceOf(options.protocol, String)) {
         this.protocol = options.protocol;
@@ -540,8 +543,8 @@ var IIPMooViewer = new Class({
     case 82: // r
       if(!e.control){
 	var r = this.view.rotation;
-	if(e.shift) r -= 45 % 360;
-	else r += 45 % 360;
+	if(e.shift) r -= this.rotationStep % 360;
+	else r += this.rotationStep % 360;
 
 	this.rotate( r );
 	if( IIPMooViewer.sync ){
@@ -1280,8 +1283,8 @@ var IIPMooViewer = new Class({
 	    // And rotation
 	    else if( Math.abs(e.rotation) > 10 ){
 	      var r = _this.view.rotation;
-	      if( e.rotation > 0 ) r += 45 % 360;
-	      else r -= 45 % 360;
+	      if( e.rotation > 0 ) r += this.rotationStep % 360;
+	      else r -= this.rotationStep % 360;
 	      _this.rotate(r);
 	    }
 	  }
