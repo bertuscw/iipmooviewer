@@ -1283,8 +1283,8 @@ var IIPMooViewer = new Class({
 	    // And rotation
 	    else if( Math.abs(e.rotation) > 10 ){
 	      var r = _this.view.rotation;
-	      if( e.rotation > 0 ) r += this.rotationStep % 360;
-	      else r -= this.rotationStep % 360;
+	      if( e.rotation > 0 ) r += _this.rotationStep % 360;
+	      else r -= _this.rotationStep % 360;
 	      _this.rotate(r);
 	    }
 	  }
