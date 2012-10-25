@@ -806,8 +806,14 @@ var IIPMooViewer = new Class({
       left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
       top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
     });
-
+    
     this.positionZone();
+    
+    // Ensure that onMove event will be fired after the morph effect is finished.
+    self = this;
+    this.canvas.get('morph').chain(function () {
+      self.fireEvent('move', [self.view.x + dx, self.view.y + dy]);
+    });
   },
 
 
