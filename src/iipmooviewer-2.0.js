@@ -113,6 +113,11 @@
                         Arguments: 
                           1. width - (integer) The new width of the viewer
                           2. height - (integer) The new height of the viewer
+
+      onKeyPress      Fired when a key is pressed. After the build in key press handler.
+                        Signature: onKeyPress(e)
+                        Arguments: 
+                          1. e - (DomEvent) Mootools dom event
                         
 */
 
@@ -565,7 +570,8 @@ var IIPMooViewer = new Class({
     default:
       break;
     }
-
+    
+    this.fireEvent('keypress', e);
   },
 
 
