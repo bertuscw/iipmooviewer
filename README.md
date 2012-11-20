@@ -92,7 +92,7 @@ option is the <b>image</b> variable)
 <b>navWinSize</b> : ratio of navigation window size to the main window.
 	Wide panoramas are scaled to twice this size [default: 0.2]
 
-<b>scale</b> : adds a scale to the image. Specify the number of pixels per unit
+<b>scale</b> : adds a scale to the image. Specify the number of pixels per unis. Should be given in pixels per mm if the default meter unit is used. Otherwise pixels per degree if degree units are used.
 
 <b>units</b> : define the units used. Can be in degrees or meters [default: meters]. Or define completely new unit system. The default structure is the following:
 <pre>
@@ -251,12 +251,12 @@ Note that for Deepzoom, the image name should be name of the .dzi or .xml Deepzo
 
 Localization
 ------------
-To create a new localization, create a new or modify an existing localization file in /lang and include this extra file.
+To create a new localization, create a new or modify an existing localization file in the src/lang folder and include this extra 
+file.
 
 For example for Chinese, create lang/help.zh.js and simply include it after the main iipmooviewer include:
 <pre>
   &lt;script type="text/javascript" src="javascript/mootools-core-1.4.5-full-nocompat-yc.js"&gt;&lt;/script&gt;
-  &lt;script type="text/javascript" src="javascript/mootools-more-1.4.0.1-compressed.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="javascript/iipmooviewer-2.0-compressed.js"&gt;&lt;/script&gt;
   &lt;script type="text/javascript" src="src/lang/help.zh.js"&gt;&lt;/script&gt;
 </pre>

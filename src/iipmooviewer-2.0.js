@@ -187,7 +187,7 @@ var IIPMooViewer = new Class({
 	this.units = {
 	  dims:   ["\'\'", "\'", "&deg"],
 	  orders: [ 1/3600, 1/60, 1 ],
-	  mults: [ 1 , 10 ,15, 30 ],
+	  mults: [1,10,15,30],
 	  factor: 3600
 	}
       }
@@ -772,8 +772,6 @@ var IIPMooViewer = new Class({
     // Use style values directly as getPosition will take into account rotation
     pos.x = this.canvas.getStyle('left').toInt();
     pos.y = this.canvas.getStyle('top').toInt();
-    //    pos.y = pos.y + Math.sin( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
-    //    pos.x = pos.x + (this.view.w/2) - Math.cos( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
     var xmove =  -pos.x;
     var ymove =  -pos.y;
     this.moveTo( xmove, ymove );
@@ -1259,6 +1257,9 @@ var IIPMooViewer = new Class({
 	    if( t2-t1 < 500 ){
 	      _this.canvas.eliminate('taptime');
 	      _this.zoomIn();
+	      if(IIPMooViewer.sync){
+		IIPMooViewer.windows(_this).each( function(el){ el.zoomIn(); });
+	      }
 	    }
 	    else{
 	      var pos = _this.canvas.getPosition(_this.container);
@@ -1294,9 +1295,9 @@ var IIPMooViewer = new Class({
 	    _this.canvas.eliminate('tapstart');
 	    _this.requestImages();
 	    _this.positionZone();
-	    //	    if(IIPMooViewer.sync){
-	    //IIPMooViewer.windows(this).each( function(el){ el.moveTo(_this.view.x,_this.view.); });
-	    // }
+	    if(IIPMooViewer.sync){
+	      IIPMooViewer.windows(_this).each( function(el){ el.moveTo(_this.view.x,_this.view.y); });
+	    }
 	  }
         },
 	'gesturestart': function(e){
@@ -1311,8 +1312,18 @@ var IIPMooViewer = new Class({
 	    _this.canvas.eliminate('tapstart');
 	    // Handle scale
 	    if( Math.abs(1-e.scale)>0.1 ){
-	      if( e.scale > 1 ) _this.zoomIn();
-	      else _this.zoomOut();
+	      if( e.scale > 1 ){
+		_this.zoomIn();
+		if(IIPMooViewer.sync){
+		  IIPMooViewer.windows(_this).each( function(el){ el.zoomIn(); });
+		}
+	      }
+	      else{
+		_this.zoomOut();
+		if(IIPMooViewer.sync){
+                  IIPMooViewer.windows(_this).each( function(el){ el.zoomOut(); });
+                }
+	      }
 	    }
 	    // And rotation
 	    else if( Math.abs(e.rotation) > 10 ){
@@ -1320,6 +1331,9 @@ var IIPMooViewer = new Class({
 	      if( e.rotation > 0 ) r += _this.rotationStep % 360;
 	      else r -= _this.rotationStep % 360;
 	      _this.rotate(r);
+	      if(IIPMooViewer.sync){
+		IIPMooViewer.windows(_this).each( function(el){ el.rotate(r); });
+	      }
 	    }
 	  }
 	}
