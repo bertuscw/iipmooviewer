@@ -311,14 +311,6 @@ var IIPMooViewer = new Class({
     // Delete our annotations
     if( this.annotations ) this.destroyAnnotations();
 
-    // Set our rotation origin - calculate differently if canvas is smaller than view port
-    if( !Browser.buggy ){
-      var origin_x = ( this.wid>this.view.w ? Math.round(this.view.x+this.view.w/2) : Math.round(this.wid/2) ) + "px";
-      var origin_y = ( this.hei>this.view.h ? Math.round(this.view.y+this.view.h/2) : Math.round(this.hei/2) ) + "px";
-      var origin = origin_x + " " + origin_y;
-      this.canvas.setStyle( this.CSSprefix+'transform-origin', origin );
-    }
-
     // Load our image mosaic
     this.loadGrid();
 
@@ -336,13 +328,15 @@ var IIPMooViewer = new Class({
   loadGrid: function(){
 
     var border = this.preload ? 1 : 0
+    
+    console.log(this.view.x);
+    console.log(this.view.y);
 
     // Get the start points for our tiles
     var startx = Math.floor( this.view.x / this.tileSize.w ) - border;
     var starty = Math.floor( this.view.y / this.tileSize.h ) - border;
     if( startx<0 ) startx = 0;
     if( starty<0 ) starty = 0;
-
 
     // If our size is smaller than the display window, only get these tiles!
     var len = this.view.w;
@@ -603,15 +597,20 @@ var IIPMooViewer = new Class({
 
     // Rotation works in Firefox 3.5+, Chrome, Safari and IE9+
     if( Browser.buggy ) return;
-
+    
+    this._updateRotationOrigin();
+    
+    // Set our rotation
     this.view.rotation = r;
     var angle = 'rotate(' + r + 'deg)';
     this.canvas.setStyle( this.CSSprefix+'transform', angle );
     
+    this._refreshCanvasPosition();
+    
     this.fireEvent('rotate', r);
   },
-
-
+  
+  
   /* Toggle fullscreen
    */
   toggleFullScreen: function(){
@@ -731,21 +730,10 @@ var IIPMooViewer = new Class({
 
     // Only morph transition if we have moved a short distance and our rotation is zero
     var morphable = Math.abs(xmove-this.view.x)<this.view.w/2 && Math.abs(ymove-this.view.y)<this.view.h/2 && this.view.rotation==0;
-    if( morphable ){
-      this.canvas.morph({
-	left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
-      });
-    }
-    else{
-      this.canvas.setStyles({
-	left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
-      });
-    }
-
+    
     this.view.x = xmove;
     this.view.y = ymove;
+    this._refreshCanvasPosition(morphable);
 
     // The morph event automatically calls requestImages
     if( !morphable ){
@@ -768,14 +756,14 @@ var IIPMooViewer = new Class({
    */
   scroll: function(e) {
 
-    var pos = {};
-    // Use style values directly as getPosition will take into account rotation
-    pos.x = this.canvas.getStyle('left').toInt();
-    pos.y = this.canvas.getStyle('top').toInt();
-    //    pos.y = pos.y + Math.sin( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
-    //    pos.x = pos.x + (this.view.w/2) - Math.cos( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
-    var xmove =  -pos.x;
-    var ymove =  -pos.y;
+    var left = this.canvas.getStyle('left').toInt();
+    var top = this.canvas.getStyle('top').toInt();    
+    var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
+    var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
+    
+    var xmove = xAndY.x;
+    var ymove = xAndY.x;
+    
     this.moveTo( xmove, ymove );
 
     if( IIPMooViewer.sync ){
@@ -789,15 +777,39 @@ var IIPMooViewer = new Class({
   /* Check our scroll bounds.
    */
   checkBounds: function( x, y ) {
-
-    if( x > this.wid-this.view.w ) x = this.wid - this.view.w;
-    if( y > this.hei-this.view.h ) y = this.hei - this.view.h;
-
-    if( x < 0 || this.wid < this.view.w ) x = 0;
-    if( y < 0 || this.hei < this.view.h ) y = 0;
-
+    
     this.view.x = x;
     this.view.y = y;
+    
+    /*
+    //!TODO try check bounds without any transformation.
+    var xAndY = this._transformRotateXAndY(x, y);
+    var leftAndTop = this._transformRotateLeftAndTopForCss(-1 * xAndY.x, -1 * xAndY.y);
+    //var leftAndTop = this._transformRotateLeftAndTopForCss(-1 * x, -1 * y);
+    var left = leftAndTop.left;
+    var top = leftAndTop.top;
+    
+    var limit = this.touch.options.limit;
+    
+    if (left < limit.x[0]) left = limit.x[0];
+    if (left > limit.x[1]) left = limit.x[1];
+    
+    if (top < limit.y[0]) top = limit.y[0];
+    if (top > limit.y[1]) top = limit.y[1];
+
+    var reverseLeftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
+    var reverseXAndY = this._transformRotateXAndY(-1 * reverseLeftAndTop.left, -1 * reverseLeftAndTop.top);
+    this.view.x = reverseXAndY.x;
+    this.view.y = reverseXAndY.y;
+    
+    // If image smaller than viewer - view.x and view.y should be 0.
+    if (limit.x[0] == limit.x[1]) {
+      this.view.x = 0;
+    }
+    if (limit.y[0] == limit.y[1]) {
+      this.view.y = 0;
+    }
+    */
   },
 
 
@@ -810,19 +822,15 @@ var IIPMooViewer = new Class({
     if( x==this.view.x && y==this.view.y ) return;
 
     this.checkBounds(x,y);
-    this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
+    
+    this._refreshCanvasPosition();
 
     this.requestImages();
     this.positionZone();
     
     this.fireEvent('move', [x, y]);
   },
-
-
-
+  
   /* Nudge the view by a small amount
    */
   nudge: function( dx, dy ){
@@ -830,10 +838,7 @@ var IIPMooViewer = new Class({
     this.checkBounds(this.view.x+dx,this.view.y+dy);
 
     // Check whether image size is less than viewport
-    this.canvas.morph({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
+    this._refreshCanvasPosition(true);
     
     this.positionZone();
     
@@ -984,22 +989,20 @@ var IIPMooViewer = new Class({
 
     if( this.view.y + this.view.h > this.hei ) this.view.y = this.hei - this.view.h;
     if( this.view.y < 0 ) this.view.y = 0;
+    
+    this._updateRotationOrigin();
 
+    this._refreshCanvasPosition();
     this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2),
       width: this.wid,
       height: this.hei
     });
-
-    // Contstrain our canvas to our containing div
-    this.constrain();
 
     // Delete our image tiles
     this.canvas.getChildren('img').destroy();
 
     this.tiles.empty();
-
+    
     this.requestImages();
     this.positionZone();
     if( this.scale ) this.updateScale();
@@ -1276,12 +1279,10 @@ var IIPMooViewer = new Class({
 	    if( _this.view.y > _this.hei-_this.view.h ) _this.view.y = _this.hei-_this.view.h;
 	    if( _this.view.x < 0 ) _this.view.x = 0;
 	    if( _this.view.y < 0 ) _this.view.y = 0;
-	    _this.canvas.setStyles({
-	      left: (_this.wid>_this.view.w) ? -_this.view.x : Math.round((_this.view.w-_this.wid)/2),
-	      top: (_this.hei>_this.view.h) ? -_this.view.y : Math.round((_this.view.h-_this.hei)/2)
-	    });
+            _this._refreshCanvasPosition();
 	  }
 	  if( e.touches.length == 2 ){
+            //!TODO Test this and look at the method _updateRotationOrigin
 	    var xx = Math.round( (e.touches[0].pageX+e.touches[1].pageX) / 2 ) + _this.view.x;
 	    var yy = Math.round( (e.touches[0].pageY+e.touches[1].pageY) / 2 ) + _this.view.y;
 	    var origin = xx + 'px,' + yy + 'px';
@@ -1775,12 +1776,8 @@ var IIPMooViewer = new Class({
     this.view.w = target_size.x;
     this.view.h = target_size.y;
 
-    // Constrain our canvas if it is smaller than the view window
-    this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
-
+    // Move and constrain our canvas
+    this._refreshCanvasPosition();
 
     // Calculate our new navigation window size
     this.calculateNavSize();
@@ -1812,7 +1809,6 @@ var IIPMooViewer = new Class({
 
     this.requestImages();
     this.positionZone();
-    this.constrain();
 
     this.fireEvent('resize', [this.view.w, this.view.h]);
   },
@@ -1871,13 +1867,7 @@ var IIPMooViewer = new Class({
     this.view.y = (yoffset<0)? 0 : yoffset;
 
     // Center our canvas, taking into account images smaller than the viewport
-    this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top : (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
-
-    this.constrain();
-
+    this._refreshCanvasPosition();
   },
 
 
@@ -1885,13 +1875,30 @@ var IIPMooViewer = new Class({
    */
   constrain: function(){
 
-    var ax = this.wid<this.view.w ? Array(Math.round((this.view.w-this.wid)/2), Math.round((this.view.w-this.wid)/2)) : Array(this.view.w-this.wid,0);
-    var ay = this.hei<this.view.h ? Array(Math.round((this.view.h-this.hei)/2), Math.round((this.view.h-this.hei)/2)) : Array(this.view.h-this.hei,0);
-
+    var verticalDiff = 0;
+    var horizontalDiff = 0;
+    if (this.view.rotation % 180 == 0) {
+        verticalDiff = this.view.w - this.wid;
+        horizontalDiff = this.view.h - this.hei;
+    } else {
+        verticalDiff = this.view.w - this.hei;
+        horizontalDiff = this.view.h - this.wid;
+    }
+    
+    var startX = verticalDiff > 0 ? Math.round(verticalDiff / 2) : 0;
+    var startY = horizontalDiff > 0 ? Math.round(horizontalDiff / 2) : 0;
+    
+    var leftAndTop = this._transformRotateLeftAndTopForCss(startX, startY);    
+    startX = leftAndTop.left;
+    startY = leftAndTop.top;
+    
+    var ax = verticalDiff > 0 ? Array(startX, startX) : Array(startX + verticalDiff, startX);
+    var ay = horizontalDiff > 0 ? Array(startY, startY) : Array(startY + horizontalDiff, startY);
+    
     this.touch.options.limit = { x: ax, y: ay };
   },
-
-
+  
+  
   /* Reposition the navigation rectangle on the overview image
    */
   positionZone: function(){
@@ -1922,6 +1929,133 @@ var IIPMooViewer = new Class({
       height: (height-border>0)? height - border : 1
     });
 
+  },
+  
+  /**
+   * Set canvas left and top.
+   * 
+   */
+  _refreshCanvasPosition: function(doMorph) {
+    
+    this.constrain();
+    var limit = this.touch.options.limit;
+    
+    var xAndY = this._transformRotateXAndY(this.view.x, this.view.y);
+    var leftAndTop = this._transformRotateLeftAndTopForCss(-1 * xAndY.x, -1 * xAndY.y);
+    var left = leftAndTop.left;
+    var top = leftAndTop.top;
+    
+    if (doMorph) {
+      this.canvas.morph({
+        left: limit.x[0] != limit.x[1] ? left : limit.x[0],
+        top: limit.y[0] != limit.y[1] ? top : limit.y[0]
+      });
+    } else {
+      this.canvas.setStyles({
+        left: limit.x[0] != limit.x[1] ? left : limit.x[0],
+        top: limit.y[0] != limit.y[1] ? top : limit.y[0]
+      });
+    }
+  },
+  
+  /** 
+   * Updates the transform-origin property of the canvas.
+   * Sets it in a way that the user will continue to see what he has seeing before rotation.
+   * 
+   */
+  _updateRotationOrigin: function() {
+    // Set our rotation origin - calculate differently if canvas is smaller than view port
+    var origin_x = ( this.wid>this.view.w ? Math.round(this.view.x+this.view.w/2) : Math.round(this.wid/2) ) + "px";
+    var origin_y = ( this.hei>this.view.h ? Math.round(this.view.y+this.view.h/2) : Math.round(this.hei/2) ) + "px";
+    var origin = origin_x + " " + origin_y;
+    this.canvas.setStyle( this.CSSprefix+'transform-origin', origin );
+  },
+  
+  /**
+   * Transform x and y depending on rotation.
+   * This transformation is symetrical - will work in both directions.
+   * 
+   */
+  _transformRotateXAndY: function(x, y) {
+    
+    var rotation = this.view.rotation;
+    if (rotation < 0) {
+      rotation = 360 + rotation;
+    }
+    
+    //!TODO On rotate change view.w and view.h
+    var verticalDiff = 0;
+    var horizontalDiff = 0;
+    if (rotation % 180 == 0) {
+        verticalDiff = this.view.w - this.wid;
+        horizontalDiff = this.view.h - this.hei;
+    } else {
+        verticalDiff = this.view.w - this.hei;
+        horizontalDiff = this.view.h - this.wid;
+    }
+    
+    var newX = 0;
+    var newY = 0;
+    if (rotation % 360 == 0) {
+        newX = x;
+        newY = y;
+    } else if (rotation % 180 == 0) {
+        newX = -1 * (x + verticalDiff);
+        newY = -1 * (y + horizontalDiff);
+    } else if (rotation % 270 == 0) {
+        newX = -1 * (y + horizontalDiff);
+        newY = x;        
+    } else if (rotation % 90 == 0) {
+        newX = y;
+        newY = -1 * (x + verticalDiff);
+    }
+
+    return {'x': newX, 'y': newY};
+  },
+  
+  /**
+   * Transforms original left and top to handle rotation. 
+   * The css left and top are applied to the element as if it was not rotated. This method transform normal left and top to left and top which can be used for css to achieve the required left and top.
+   * Only 90 degreees rotation is handled.
+   * If needs to handle any rotation calculations with rotation matrix ((sin r, cos r), (-cos r, sin r)) is needed.
+   * 
+   */
+  _transformRotateLeftAndTopForCss: function(left, top, reverse) {
+    
+    var rotation = this.view.rotation;
+    if (rotation < 0) {
+      rotation = 360 + rotation;
+    }
+    
+    var transformOrigin = this.canvas.getStyle(this.CSSprefix+'transform-origin').replace('px', '').replace('px', '').split(' ');
+    var transformOriginX = parseInt(transformOrigin[0]);
+    var transformOriginY = parseInt(transformOrigin[1]);
+    
+    var realToCssDiffLeft = 0;
+    var realToCssDiffTop = 0;
+    
+    if (rotation % 360 == 0) {
+        // No transformation required.
+    } else if (rotation % 180 == 0) {
+        realToCssDiffLeft = ((this.wid - transformOriginX) - transformOriginX);
+        realToCssDiffTop = ((this.hei - transformOriginY) - transformOriginY);
+    } else if (rotation % 270 == 0) {
+        realToCssDiffLeft = ((transformOriginY) - transformOriginX);
+        realToCssDiffTop = ((this.wid - transformOriginX) - transformOriginY);
+    } else if (rotation % 90 == 0) {
+        realToCssDiffLeft = ((this.hei - transformOriginY) - transformOriginX);
+        realToCssDiffTop = ((transformOriginX) - transformOriginY);
+    }
+
+    if ( ! reverse) {
+      left += realToCssDiffLeft;
+      top += realToCssDiffTop;
+    } else {
+      left -= realToCssDiffLeft;
+      top -= realToCssDiffTop;
+    }    
+
+    return {'left': left, 'top': top};
   }
 });
 
