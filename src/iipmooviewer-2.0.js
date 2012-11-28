@@ -328,9 +328,6 @@ var IIPMooViewer = new Class({
   loadGrid: function(){
 
     var border = this.preload ? 1 : 0
-    
-    console.log(this.view.x);
-    console.log(this.view.y);
 
     // Get the start points for our tiles
     var startx = Math.floor( this.view.x / this.tileSize.w ) - border;
@@ -605,6 +602,7 @@ var IIPMooViewer = new Class({
     var angle = 'rotate(' + r + 'deg)';
     this.canvas.setStyle( this.CSSprefix+'transform', angle );
     
+    this._refreshViewXYWHOnRotation();
     this._refreshCanvasPosition();
     
     this.fireEvent('rotate', r);
@@ -756,15 +754,8 @@ var IIPMooViewer = new Class({
    */
   scroll: function(e) {
 
-    var left = this.canvas.getStyle('left').toInt();
-    var top = this.canvas.getStyle('top').toInt();    
-    var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
-    var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
-    
-    var xmove = xAndY.x;
-    var ymove = xAndY.x;
-    
-    this.moveTo( xmove, ymove );
+    var xAndY = this._getXAndYByLeftAndTop();
+    this.moveTo(xAndY.x, xAndY.y);
 
     if( IIPMooViewer.sync ){
       IIPMooViewer.windows(this).each( function(el){ el.moveTo(xmove,ymove); });
@@ -778,8 +769,39 @@ var IIPMooViewer = new Class({
    */
   checkBounds: function( x, y ) {
     
+    console.log('x: ' + x);
+    console.log('y: ' + y);
+    
+    var rotation = this.view.rotation;
+    if (rotation < 0) {
+      rotation = 360 + rotation;
+    }
+    
+    //!TODO On rotate change view.w and view.h
+    var maxX = 0;
+    var maxY = 0;
+    if (rotation % 180 == 0) {
+      maxX = this.wid - this.view.w;
+      maxY = this.hei - this.view.h;
+    } else {
+      maxX = this.wid - this.view.h;
+      maxY = this.hei - this.view.w;
+    }
+    
+    console.log('maxX:' + maxX);
+    console.log('maxY:' + maxY);
+    
+    if(x > maxX) x = maxX;
+    if(y > maxY) y = maxY;
+
+    if(x < 0 || maxX < 0) x = 0;
+    if(y < 0 || maxY < 0) y = 0;
+
     this.view.x = x;
     this.view.y = y;
+    
+    console.log('x: ' + x);
+    console.log('y: ' + y);
     
     /*
     //!TODO try check bounds without any transformation.
@@ -1773,6 +1795,7 @@ var IIPMooViewer = new Class({
   reflow: function(){
 
     var target_size = this.container.getSize();
+    //!TODO
     this.view.w = target_size.x;
     this.view.h = target_size.y;
 
@@ -1940,7 +1963,7 @@ var IIPMooViewer = new Class({
     this.constrain();
     var limit = this.touch.options.limit;
     
-    var xAndY = this._transformRotateXAndY(this.view.x, this.view.y);
+    var xAndY = this._transformRotateXAndY(this.view.x, this.view.y, true);
     var leftAndTop = this._transformRotateLeftAndTopForCss(-1 * xAndY.x, -1 * xAndY.y);
     var left = leftAndTop.left;
     var top = leftAndTop.top;
@@ -1971,12 +1994,40 @@ var IIPMooViewer = new Class({
     this.canvas.setStyle( this.CSSprefix+'transform-origin', origin );
   },
   
+  _refreshViewXYWHOnRotation: function(x, y) {
+    var rotation = this.view.rotation;
+    if (rotation < 0) {
+      rotation = 360 + rotation;
+    }
+    
+    if (rotation % 180 == 0) {
+        //this.view.w = this.view.w;
+        //this.view.h = this.view.h;
+    } else {
+        //var tempW = this.view.w;
+        //this.view.w = this.view.h;
+        //this.view.h = tempW;
+    }
+    
+    var xAndY = this._getXAndYByLeftAndTop();
+    this.moveTo(xAndY.x, xAndY.y);
+  },
+  
+  _getXAndYByLeftAndTop: function(x, y) {
+    var left = this.canvas.getStyle('left').toInt();
+    var top = this.canvas.getStyle('top').toInt();
+    var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
+    var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
+    
+    return xAndY;
+  },
+  
   /**
    * Transform x and y depending on rotation.
    * This transformation is symetrical - will work in both directions.
    * 
    */
-  _transformRotateXAndY: function(x, y) {
+  _transformRotateXAndY: function(x, y, reverse) {
     
     var rotation = this.view.rotation;
     if (rotation < 0) {
@@ -1987,27 +2038,34 @@ var IIPMooViewer = new Class({
     var verticalDiff = 0;
     var horizontalDiff = 0;
     if (rotation % 180 == 0) {
-        verticalDiff = this.view.w - this.wid;
-        horizontalDiff = this.view.h - this.hei;
+      verticalDiff = this.view.w - this.wid;
+      horizontalDiff = this.view.h - this.hei;
     } else {
-        verticalDiff = this.view.w - this.hei;
-        horizontalDiff = this.view.h - this.wid;
+      verticalDiff = this.view.w - this.hei;
+      horizontalDiff = this.view.h - this.wid;
+      
+      if (reverse) {
+        var tempVDiff = verticalDiff;
+        verticalDiff = horizontalDiff;
+        horizontalDiff = tempVDiff;
+        rotation += 180;
+      }
     }
     
     var newX = 0;
     var newY = 0;
     if (rotation % 360 == 0) {
-        newX = x;
-        newY = y;
+      newX = x;
+      newY = y;
     } else if (rotation % 180 == 0) {
-        newX = -1 * (x + verticalDiff);
-        newY = -1 * (y + horizontalDiff);
+      newX = -1 * (x + verticalDiff);
+      newY = -1 * (y + horizontalDiff);
     } else if (rotation % 270 == 0) {
-        newX = -1 * (y + horizontalDiff);
-        newY = x;        
+      newX = -1 * (y + horizontalDiff);
+      newY = x;
     } else if (rotation % 90 == 0) {
-        newX = y;
-        newY = -1 * (x + verticalDiff);
+      newX = y;
+      newY = -1 * (x + verticalDiff);
     }
 
     return {'x': newX, 'y': newY};
