@@ -776,9 +776,6 @@ var IIPMooViewer = new Class({
    */
   checkBounds: function( x, y ) {
     
-    console.log('x: ' + x);
-    console.log('y: ' + y);
-    
     var rotation = this.view.rotation;
     if (rotation < 0) {
       rotation = 360 + rotation;
@@ -795,9 +792,6 @@ var IIPMooViewer = new Class({
       maxY = this.hei - this.view.w;
     }
     
-    console.log('maxX:' + maxX);
-    console.log('maxY:' + maxY);
-    
     if(x > maxX) x = maxX;
     if(y > maxY) y = maxY;
 
@@ -806,39 +800,6 @@ var IIPMooViewer = new Class({
 
     this.view.x = x;
     this.view.y = y;
-    
-    console.log('x: ' + x);
-    console.log('y: ' + y);
-    
-    /*
-    //!TODO try check bounds without any transformation.
-    var xAndY = this._transformRotateXAndY(x, y);
-    var leftAndTop = this._transformRotateLeftAndTopForCss(-1 * xAndY.x, -1 * xAndY.y);
-    //var leftAndTop = this._transformRotateLeftAndTopForCss(-1 * x, -1 * y);
-    var left = leftAndTop.left;
-    var top = leftAndTop.top;
-    
-    var limit = this.touch.options.limit;
-    
-    if (left < limit.x[0]) left = limit.x[0];
-    if (left > limit.x[1]) left = limit.x[1];
-    
-    if (top < limit.y[0]) top = limit.y[0];
-    if (top > limit.y[1]) top = limit.y[1];
-
-    var reverseLeftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
-    var reverseXAndY = this._transformRotateXAndY(-1 * reverseLeftAndTop.left, -1 * reverseLeftAndTop.top);
-    this.view.x = reverseXAndY.x;
-    this.view.y = reverseXAndY.y;
-    
-    // If image smaller than viewer - view.x and view.y should be 0.
-    if (limit.x[0] == limit.x[1]) {
-      this.view.x = 0;
-    }
-    if (limit.y[0] == limit.y[1]) {
-      this.view.y = 0;
-    }
-    */
   },
 
 
