@@ -326,8 +326,15 @@ var IIPMooViewer = new Class({
   /* Create a grid of tiles with the appropriate tile request and positioning
    */
   loadGrid: function(){
+    
+    var maxVisibleW = this.view.w;
+    var maxVisibleH = this.view.h;
+    if (this.view.rotation % 180 != 0) {
+      maxVisibleW = this.view.h;
+      maxVisibleH = this.view.w;
+    }
 
-    var border = this.preload ? 1 : 0
+    var border = this.preload ? 1 : 0;
 
     // Get the start points for our tiles
     var startx = Math.floor( this.view.x / this.tileSize.w ) - border;
@@ -336,13 +343,13 @@ var IIPMooViewer = new Class({
     if( starty<0 ) starty = 0;
 
     // If our size is smaller than the display window, only get these tiles!
-    var len = this.view.w;
-    if( this.wid < this.view.w ) len = this.wid;
+    var len = maxVisibleW;
+    if( this.wid < maxVisibleW ) len = this.wid;
     var endx =  Math.ceil( ((len + this.view.x)/this.tileSize.w) - 1 ) + border;
 
 
-    len = this.view.h;
-    if( this.hei < this.view.h ) len = this.hei;
+    len = maxVisibleH;
+    if( this.hei < maxVisibleH ) len = this.hei;
     var endy = Math.ceil( ( (len + this.view.y)/this.tileSize.h) - 1 ) + border;
 
 
@@ -358,10 +365,10 @@ var IIPMooViewer = new Class({
        Also Center the image if our viewable image is smaller than the window
     */
     var xoffset = Math.floor(this.view.x % this.tileSize.w);
-    if( this.wid < this.view.w ) xoffset -=  (this.view.w - this.wid)/2;
+    if( this.wid < maxVisibleW ) xoffset -=  (maxVisibleW - this.wid)/2;
 
     var yoffset = Math.floor(this.view.y % this.tileSize.h);
-    if( this.hei < this.view.h ) yoffset -= (this.view.h - this.hei)/2;
+    if( this.hei < maxVisibleH ) yoffset -= (maxVisibleH - this.hei)/2;
 
     var tile;
     var i, j, k, n;
@@ -1987,9 +1994,17 @@ var IIPMooViewer = new Class({
    * 
    */
   _updateRotationOrigin: function() {
+    
+    var maxVisibleW = this.view.w;
+    var maxVisibleH = this.view.h;
+    if (this.view.rotation % 180 != 0) {
+      maxVisibleW = this.view.h;
+      maxVisibleH = this.view.w;
+    }
+    
     // Set our rotation origin - calculate differently if canvas is smaller than view port
-    var origin_x = ( this.wid>this.view.w ? Math.round(this.view.x+this.view.w/2) : Math.round(this.wid/2) ) + "px";
-    var origin_y = ( this.hei>this.view.h ? Math.round(this.view.y+this.view.h/2) : Math.round(this.hei/2) ) + "px";
+    var origin_x = ( this.wid>maxVisibleW ? Math.round(this.view.x+maxVisibleW/2) : Math.round(this.wid/2) ) + "px";
+    var origin_y = ( this.hei>maxVisibleH ? Math.round(this.view.y+maxVisibleH/2) : Math.round(this.hei/2) ) + "px";
     var origin = origin_x + " " + origin_y;
     this.canvas.setStyle( this.CSSprefix+'transform-origin', origin );
   },
