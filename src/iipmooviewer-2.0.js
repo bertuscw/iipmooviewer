@@ -602,15 +602,16 @@ var IIPMooViewer = new Class({
     // Rotation works in Firefox 3.5+, Chrome, Safari and IE9+
     if( Browser.buggy ) return;
     
-    this._updateRotationOrigin();
+    var visibleCenter = this._getPointInCenter();
     
     // Set our rotation
     this.view.rotation = r;
     var angle = 'rotate(' + r + 'deg)';
     this.canvas.setStyle( this.CSSprefix+'transform', angle );
     
-    this._refreshViewXYWHOnRotation();
-    this._refreshCanvasPosition();
+    //!TODO On rotate change view.w and view.h
+    
+    this._movePointInCenter(visibleCenter.x, visibleCenter.y);
     
     this.fireEvent('rotate', r);
   },
@@ -781,7 +782,6 @@ var IIPMooViewer = new Class({
       rotation = 360 + rotation;
     }
     
-    //!TODO On rotate change view.w and view.h
     var maxX = 0;
     var maxY = 0;
     if (rotation % 180 == 0) {
@@ -806,10 +806,10 @@ var IIPMooViewer = new Class({
 
   /* Move to a particular position on the image
    */
-  moveTo: function( x, y ){
+  moveTo: function( x, y, forseMove ){
 
     // To avoid unnecessary redrawing ...
-    if( x==this.view.x && y==this.view.y ) return;
+    if( x==this.view.x && y==this.view.y && ! forseMove ) return;
 
     this.checkBounds(x,y);
     
@@ -817,7 +817,7 @@ var IIPMooViewer = new Class({
 
     this.requestImages();
     this.positionZone();
-    
+        
     this.fireEvent('move', [x, y]);
   },
   
@@ -980,8 +980,6 @@ var IIPMooViewer = new Class({
     if( this.view.y + this.view.h > this.hei ) this.view.y = this.hei - this.view.h;
     if( this.view.y < 0 ) this.view.y = 0;
     
-    this._updateRotationOrigin();
-
     this._refreshCanvasPosition();
     this.canvas.setStyles({
       width: this.wid,
@@ -1272,7 +1270,7 @@ var IIPMooViewer = new Class({
             _this._refreshCanvasPosition();
 	  }
 	  if( e.touches.length == 2 ){
-            //!TODO Test this and look at the method _updateRotationOrigin
+            //!TODO Test this and look at the method _movePointInCenter
 	    var xx = Math.round( (e.touches[0].pageX+e.touches[1].pageX) / 2 ) + _this.view.x;
 	    var yy = Math.round( (e.touches[0].pageY+e.touches[1].pageY) / 2 ) + _this.view.y;
 	    var origin = xx + 'px,' + yy + 'px';
@@ -1923,6 +1921,48 @@ var IIPMooViewer = new Class({
   },
   
   /**
+   * Gets the coordinates of the point of the image which is in the center currently.
+   * 
+   */
+  _getPointInCenter: function() {
+    var maxVisibleW = this.view.w;
+    var maxVisibleH = this.view.h;
+    if (this.view.rotation % 180 != 0) {
+      maxVisibleW = this.view.h;
+      maxVisibleH = this.view.w;
+    }
+    
+    var x = ( this.wid>maxVisibleW ? Math.round(this.view.x+maxVisibleW/2) : Math.round(this.wid/2) );
+    var y = ( this.hei>maxVisibleH ? Math.round(this.view.y+maxVisibleH/2) : Math.round(this.hei/2) );
+    return {'x': x, 'y': y};
+  },
+  
+  /**
+   * Moves the image to a posisiton where the point given will be in the center.
+   * 
+   */
+  _movePointInCenter: function(x, y) {
+    
+    var maxVisibleWidth = this.view.w;
+    var maxVisibleHeight = this.view.h;
+    if (this.view.rotation % 180 != 0) {
+        maxVisibleWidth = this.view.h;
+        maxVisibleHeight = this.view.w;
+    }
+    
+    this.moveTo(Math.round(x - maxVisibleWidth/2), Math.round(y - maxVisibleHeight/2), true);
+  },
+    
+  _getXAndYByLeftAndTop: function(x, y) {
+    var left = this.canvas.getStyle('left').toInt();
+    var top = this.canvas.getStyle('top').toInt();
+    var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
+    var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
+    
+    return xAndY;
+  },
+  
+  /**
    * Set canvas left and top.
    * 
    */
@@ -1949,55 +1989,6 @@ var IIPMooViewer = new Class({
     }
   },
   
-  /** 
-   * Updates the transform-origin property of the canvas.
-   * Sets it in a way that the user will continue to see what he has seeing before rotation.
-   * 
-   */
-  _updateRotationOrigin: function() {
-    
-    var maxVisibleW = this.view.w;
-    var maxVisibleH = this.view.h;
-    if (this.view.rotation % 180 != 0) {
-      maxVisibleW = this.view.h;
-      maxVisibleH = this.view.w;
-    }
-    
-    // Set our rotation origin - calculate differently if canvas is smaller than view port
-    var origin_x = ( this.wid>maxVisibleW ? Math.round(this.view.x+maxVisibleW/2) : Math.round(this.wid/2) ) + "px";
-    var origin_y = ( this.hei>maxVisibleH ? Math.round(this.view.y+maxVisibleH/2) : Math.round(this.hei/2) ) + "px";
-    var origin = origin_x + " " + origin_y;
-    this.canvas.setStyle( this.CSSprefix+'transform-origin', origin );
-  },
-  
-  _refreshViewXYWHOnRotation: function(x, y) {
-    var rotation = this.view.rotation;
-    if (rotation < 0) {
-      rotation = 360 + rotation;
-    }
-    
-    if (rotation % 180 == 0) {
-        //this.view.w = this.view.w;
-        //this.view.h = this.view.h;
-    } else {
-        //var tempW = this.view.w;
-        //this.view.w = this.view.h;
-        //this.view.h = tempW;
-    }
-    
-    var xAndY = this._getXAndYByLeftAndTop();
-    this.moveTo(xAndY.x, xAndY.y);
-  },
-  
-  _getXAndYByLeftAndTop: function(x, y) {
-    var left = this.canvas.getStyle('left').toInt();
-    var top = this.canvas.getStyle('top').toInt();
-    var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
-    var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
-    
-    return xAndY;
-  },
-  
   /**
    * Transform x and y depending on rotation.
    * This transformation is symetrical - will work in both directions.
@@ -2010,7 +2001,6 @@ var IIPMooViewer = new Class({
       rotation = 360 + rotation;
     }
     
-    //!TODO On rotate change view.w and view.h
     var verticalDiff = 0;
     var horizontalDiff = 0;
     if (rotation % 180 == 0) {
@@ -2061,10 +2051,14 @@ var IIPMooViewer = new Class({
       rotation = 360 + rotation;
     }
     
+    /* We do not move transform origin anymore.
     var transformOrigin = this.canvas.getStyle(this.CSSprefix+'transform-origin').replace('px', '').replace('px', '').split(' ');
     var transformOriginX = parseInt(transformOrigin[0]);
     var transformOriginY = parseInt(transformOrigin[1]);
-    
+    */
+    var transformOriginX = Math.round(this.wid/2);
+    var transformOriginY = Math.round(this.hei/2);
+   
     var realToCssDiffLeft = 0;
     var realToCssDiffTop = 0;
     
