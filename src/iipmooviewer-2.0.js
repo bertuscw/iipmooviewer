@@ -816,8 +816,24 @@ var IIPMooViewer = new Class({
   /* Nudge the view by a small amount
    */
   nudge: function( dx, dy ){
+    var rotation = this._getPositiveRotation();
+    
+    var rdx, rdy;
+    if (rotation % 360 == 0) {
+      rdx = dx;
+      rdy = dy;
+    } else if (rotation % 180 == 0) {
+      rdx = -1 * dx;
+      rdy = -1 * dy;
+    } else if (rotation % 270 == 0) {
+      rdx = -1 * dy;
+      rdy = dx;
+    } else if (rotation % 90 == 0) {
+      rdx = dy;
+      rdy = -1 * dx;
+    }
 
-    this.checkBounds(this.view.x+dx,this.view.y+dy);
+    this.checkBounds(this.view.x+rdx,this.view.y+rdy);
 
     // Check whether image size is less than viewport
     this._refreshCanvasPosition(true);
@@ -825,9 +841,9 @@ var IIPMooViewer = new Class({
     this.positionZone();
     
     // Ensure that onMove event will be fired after the morph effect is finished.
-    self = this;
+    var _this = this;
     this.canvas.get('morph').chain(function () {
-      self.fireEvent('move', [self.view.x + dx, self.view.y + dy]);
+      _this.fireEvent('move', [_this.view.x, _this.view.y]);
     });
   },
 
