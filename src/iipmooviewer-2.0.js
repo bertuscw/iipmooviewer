@@ -1254,7 +1254,7 @@ var IIPMooViewer = new Class({
       });
 
       // Now add our touch canvas events
-      this.canvas.addEvents({
+      this.container.addEvents({
         'touchstart': function(e){
 	  e.preventDefault();
 	  // Only handle single finger events
@@ -1286,7 +1286,6 @@ var IIPMooViewer = new Class({
 	  }
 	  if( e.touches.length == 2 ){
             //!TODO Test this and look at the method movePointInCenter
-            alert('2 touches?');
 	    var xx = Math.round( (e.touches[0].pageX+e.touches[1].pageX) / 2 ) + _this.view.x;
 	    var yy = Math.round( (e.touches[0].pageY+e.touches[1].pageY) / 2 ) + _this.view.y;
 	    var origin = xx + 'px,' + yy + 'px';
