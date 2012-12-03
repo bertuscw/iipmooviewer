@@ -327,8 +327,6 @@ var IIPMooViewer = new Class({
    */
   loadGrid: function(){
     
-    var wAndH = this._getRotatedWAndH();
-
     var border = this.preload ? 1 : 0;
 
     // Get the start points for our tiles
@@ -338,13 +336,13 @@ var IIPMooViewer = new Class({
     if( starty<0 ) starty = 0;
 
     // If our size is smaller than the display window, only get these tiles!
-    var len = wAndH.w;
-    if( this.wid < wAndH.w ) len = this.wid;
+    var len = this.view.rotatedW;
+    if( this.wid < this.view.rotatedW ) len = this.wid;
     var endx =  Math.ceil( ((len + this.view.x)/this.tileSize.w) - 1 ) + border;
 
 
-    len = wAndH.h;
-    if( this.hei < wAndH.h ) len = this.hei;
+    len = this.view.rotatedH;
+    if( this.hei < this.view.rotatedH ) len = this.hei;
     var endy = Math.ceil( ( (len + this.view.y)/this.tileSize.h) - 1 ) + border;
 
 
@@ -360,10 +358,10 @@ var IIPMooViewer = new Class({
        Also Center the image if our viewable image is smaller than the window
     */
     var xoffset = Math.floor(this.view.x % this.tileSize.w);
-    if( this.wid < wAndH.w ) xoffset -=  (wAndH.w - this.wid)/2;
+    if( this.wid < this.view.rotatedW ) xoffset -=  (this.view.rotatedW - this.wid)/2;
 
     var yoffset = Math.floor(this.view.y % this.tileSize.h);
-    if( this.hei < wAndH.h ) yoffset -= (wAndH.h - this.hei)/2;
+    if( this.hei < this.view.rotatedH ) yoffset -= (this.view.rotatedH - this.hei)/2;
 
     var tile;
     var i, j, k, n;
@@ -604,7 +602,7 @@ var IIPMooViewer = new Class({
     var angle = 'rotate(' + r + 'deg)';
     this.canvas.setStyle( this.CSSprefix+'transform', angle );
     
-    //!TODO On rotate change view.w and view.h
+    this._updateRotatedWAndH();
     
     this._movePointInCenter(visibleCenter.x, visibleCenter.y);
     
@@ -864,16 +862,14 @@ var IIPMooViewer = new Class({
       if( cc != "zone" & cc != 'navimage' ){
 	pos = this.canvas.getPosition();
 
-	// Center our zooming on the mouse position when over the main target window
-        var wAndH = this._getRotatedWAndH();
-        
+	// Center our zooming on the mouse position when over the main target window        
         var overCanvasX = event.page.x - pos.x;
         var overCanvasY = event.page.y - pos.y;
         
         var xAndY = this._transformRotateOverCanvasToOverImage(overCanvasX, overCanvasY);
         
-	this.view.x = xAndY.x - Math.floor(wAndH.w/2);
-	this.view.y = xAndY.y - Math.floor(wAndH.h/2);
+	this.view.x = xAndY.x - Math.floor(this.view.rotatedW/2);
+	this.view.y = xAndY.y - Math.floor(this.view.rotatedH/2);
       }
       else{
 	// For zooms with the mouse over the navigation window
@@ -948,16 +944,14 @@ var IIPMooViewer = new Class({
       // Calculate an offset to take into account the view port size
       // Center if our image width at this resolution is smaller than the view width - only need to do this on zooming in as our
       // constraining will automatically recenter when zooming out
-      var wAndH = this._getRotatedWAndH();
-      
       var xoffset, yoffset;
       if( r > this.view.res ){
-	xoffset = (this.resolutions[this.view.res].w > wAndH.w) ? wAndH.w*(factor-1)/2 : this.resolutions[r].w/2 - wAndH.w/2;
-	yoffset = (this.resolutions[this.view.res].h > wAndH.h) ? wAndH.h*(factor-1)/2 : this.resolutions[r].h/2 - wAndH.h/2;
+	xoffset = (this.resolutions[this.view.res].w > this.view.rotatedW) ? this.view.rotatedW*(factor-1)/2 : this.resolutions[r].w/2 - this.view.rotatedW/2;
+	yoffset = (this.resolutions[this.view.res].h > this.view.rotatedH) ? this.view.rotatedH*(factor-1)/2 : this.resolutions[r].h/2 - this.view.rotatedH/2;
       }
       else{
-	xoffset = -wAndH.w*(1-factor)/2;
-	yoffset = -wAndH.h*(1-factor)/2;;
+	xoffset = -this.view.rotatedW*(1-factor)/2;
+	yoffset = -this.view.rotatedH*(1-factor)/2;;
       }
 
       this.view.x = Math.round( factor*this.view.x + xoffset );
@@ -979,13 +973,11 @@ var IIPMooViewer = new Class({
     // Get the image size for this resolution
     this.wid = this.resolutions[this.view.res].w;
     this.hei = this.resolutions[this.view.res].h;
-    
-    var wAndH = this._getRotatedWAndH();
 
-    if( this.view.x + wAndH.w > this.wid ) this.view.x = this.wid - wAndH.w;
+    if( this.view.x + this.view.rotatedW > this.wid ) this.view.x = this.wid - this.view.rotatedW;
     if( this.view.x < 0 ) this.view.x = 0;
 
-    if( this.view.y + wAndH.h > this.hei ) this.view.y = this.hei - wAndH.h;
+    if( this.view.y + this.view.rotatedH > this.hei ) this.view.y = this.hei - this.view.rotatedH;
     if( this.view.y < 0 ) this.view.y = 0;
     
     this._refreshCanvasPosition();
@@ -1035,7 +1027,8 @@ var IIPMooViewer = new Class({
     this.view.y = -1;
     this.view.w = target_size.x;
     this.view.h = target_size.y;
-
+    this._updateRotatedWAndH();
+    
     // Calculate our navigation window size
     this.calculateNavSize();
 
@@ -1770,6 +1763,7 @@ var IIPMooViewer = new Class({
     var target_size = this.container.getSize();
     this.view.w = target_size.x;
     this.view.h = target_size.y;
+    this._updateRotatedWAndH();
 
     // Move and constrain our canvas
     this._refreshCanvasPosition();
@@ -1855,12 +1849,10 @@ var IIPMooViewer = new Class({
 
     // Calculate the x,y for a centered view, making sure we have no negative
     // in case our resolution is smaller than the viewport
-    var wAndH = this._getRotatedWAndH();
-    
-    var xoffset = Math.round( (this.wid-wAndH.w)/2 );
+    var xoffset = Math.round( (this.wid-this.view.rotatedW)/2 );
     this.view.x = (xoffset<0)? 0 : xoffset;
 
-    var yoffset = Math.round( (this.hei-wAndH.h)/2 );
+    var yoffset = Math.round( (this.hei-this.view.rotatedH)/2 );
     this.view.y = (yoffset<0)? 0 : yoffset;
 
     // Center our canvas, taking into account images smaller than the viewport
@@ -1933,10 +1925,8 @@ var IIPMooViewer = new Class({
    * 
    */
   _getPointInCenter: function() {
-    var wAndH = this._getRotatedWAndH();
-    
-    var x = ( this.wid>wAndH.w ? Math.round(this.view.x+wAndH.w/2) : Math.round(this.wid/2) );
-    var y = ( this.hei>wAndH.h ? Math.round(this.view.y+wAndH.h/2) : Math.round(this.hei/2) );
+    var x = ( this.wid>this.view.rotatedW ? Math.round(this.view.x+this.view.rotatedW/2) : Math.round(this.wid/2) );
+    var y = ( this.hei>this.view.rotatedH ? Math.round(this.view.y+this.view.rotatedH/2) : Math.round(this.hei/2) );
     return {'x': x, 'y': y};
   },
   
@@ -1945,13 +1935,10 @@ var IIPMooViewer = new Class({
    * 
    */
   _movePointInCenter: function(x, y) {
-    
-    var wAndH = this._getRotatedWAndH();
-    
     // Enforce the move to reload the images.
     this.view.x = -1;
     this.view.y = -1;
-    this.moveTo(Math.round(x - wAndH.w/2), Math.round(y - wAndH.h/2));
+    this.moveTo(Math.round(x - this.view.rotatedW/2), Math.round(y - this.view.rotatedH/2));
   },
   
   /**
@@ -2123,17 +2110,16 @@ var IIPMooViewer = new Class({
   },
   
   /**
-   * Gets w and h depending on rotation.
+   * Update view.rotatedW and view.rotatedH.
    * 
    */
-  _getRotatedWAndH: function() {
-    var w = this.view.w;
-    var h = this.view.h;
+  _updateRotatedWAndH: function() {
+    this.view.rotatedW = this.view.w;
+    this.view.rotatedH = this.view.h;
     if (this.view.rotation % 180 != 0) {
-      w = this.view.h;
-      h = this.view.w;
+      this.view.rotatedW = this.view.h;
+      this.view.rotatedH = this.view.w;
     }
-    return {'w': w, 'h': h};
   }
 });
 
