@@ -595,7 +595,7 @@ var IIPMooViewer = new Class({
     // Rotation works in Firefox 3.5+, Chrome, Safari and IE9+
     if( Browser.buggy ) return;
     
-    var visibleCenter = this._getPointInCenter();
+    var visibleCenter = this.getPointInCenter();
     
     // Set our rotation
     this.view.rotation = r;
@@ -604,7 +604,7 @@ var IIPMooViewer = new Class({
     
     this._updateRotatedWAndH();
     
-    this._movePointInCenter(visibleCenter.x, visibleCenter.y);
+    this.movePointInCenter(visibleCenter.x, visibleCenter.y);
     
     this.fireEvent('rotate', r);
   },
@@ -757,7 +757,7 @@ var IIPMooViewer = new Class({
    */
   scroll: function(e) {
 
-    var xAndY = this._getXAndYByLeftAndTop();
+    var xAndY = this.getXAndYByLeftAndTop();
     this.moveTo(xAndY.x, xAndY.y);
 
     if( IIPMooViewer.sync ){
@@ -1269,7 +1269,7 @@ var IIPMooViewer = new Class({
             _this._refreshCanvasPosition();
 	  }
 	  if( e.touches.length == 2 ){
-            //!TODO Test this and look at the method _movePointInCenter
+            //!TODO Test this and look at the method movePointInCenter
             alert('2 touches?');
 	    var xx = Math.round( (e.touches[0].pageX+e.touches[1].pageX) / 2 ) + _this.view.x;
 	    var yy = Math.round( (e.touches[0].pageY+e.touches[1].pageY) / 2 ) + _this.view.y;
@@ -1921,10 +1921,23 @@ var IIPMooViewer = new Class({
   },
   
   /**
+   * Get x and y relative to image by left and top of the canvas.
+   *
+   */
+  getXAndYByLeftAndTop: function(x, y) {
+    var left = this.canvas.getStyle('left').toInt();
+    var top = this.canvas.getStyle('top').toInt();
+    var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
+    var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
+    
+    return xAndY;
+  },
+  
+  /**
    * Gets the coordinates of the point of the image which is in the center currently.
    * 
    */
-  _getPointInCenter: function() {
+  getPointInCenter: function() {
     var x = ( this.wid>this.view.rotatedW ? Math.round(this.view.x+this.view.rotatedW/2) : Math.round(this.wid/2) );
     var y = ( this.hei>this.view.rotatedH ? Math.round(this.view.y+this.view.rotatedH/2) : Math.round(this.hei/2) );
     return {'x': x, 'y': y};
@@ -1934,24 +1947,11 @@ var IIPMooViewer = new Class({
    * Moves the image to a posisiton where the point given will be in the center.
    * 
    */
-  _movePointInCenter: function(x, y) {
+  movePointInCenter: function(x, y) {
     // Enforce the move to reload the images.
     this.view.x = -1;
     this.view.y = -1;
     this.moveTo(Math.round(x - this.view.rotatedW/2), Math.round(y - this.view.rotatedH/2));
-  },
-  
-  /**
-   * Get x and y relative to image by left and top of the canvas.
-   *
-   */
-  _getXAndYByLeftAndTop: function(x, y) {
-    var left = this.canvas.getStyle('left').toInt();
-    var top = this.canvas.getStyle('top').toInt();
-    var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
-    var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
-    
-    return xAndY;
   },
   
   /**
