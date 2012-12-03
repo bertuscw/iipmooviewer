@@ -879,10 +879,7 @@ var IIPMooViewer = new Class({
 	pos = this.canvas.getPosition();
 
 	// Center our zooming on the mouse position when over the main target window        
-        var overCanvasX = event.page.x - pos.x;
-        var overCanvasY = event.page.y - pos.y;
-        
-        var xAndY = this._transformRotateOverCanvasToOverImage(overCanvasX, overCanvasY);
+        var xAndY = this._transformRotateOverCanvasToOverImage(event.page.x - pos.x, event.page.y - pos.y);
         
 	this.view.x = xAndY.x - Math.floor(this.view.rotatedW/2);
 	this.view.y = xAndY.y - Math.floor(this.view.rotatedH/2);
@@ -1266,6 +1263,11 @@ var IIPMooViewer = new Class({
 	    _this.canvas.store( 'tapstart', 1 );
 	    if( t2-t1 < 500 ){
 	      _this.canvas.eliminate('taptime');
+              // Center our zooming on the mouse position when over the main target window        
+              pos = _this.canvas.getPosition();
+              var xAndY = _this._transformRotateOverCanvasToOverImage(e.touches[0].pageX - pos.x, e.touches[0].pageY - pos.y);
+              _this.view.x = xAndY.x - Math.floor(_this.view.rotatedW/2);
+              _this.view.y = xAndY.y - Math.floor(_this.view.rotatedH/2);
 	      _this.zoomIn();
 	    }
 	    else{
