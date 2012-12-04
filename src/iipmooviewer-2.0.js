@@ -1277,6 +1277,7 @@ var IIPMooViewer = new Class({
 	  }
         },
 	'touchmove': function(e){
+          e.preventDefault();
 	  // Only handle single finger events
 	  if(e.touches.length == 1){            
             var pos = _this.canvas.getPosition(_this.container);
@@ -1284,7 +1285,7 @@ var IIPMooViewer = new Class({
             var xMove = _this.touchstart.x - newXAndY.x;
             var yMove = _this.touchstart.y - newXAndY.y;            
             _this.checkBounds(_this.view.x + xMove, _this.view.y + yMove);
-            _this._refreshCanvasPosition();
+            _this._refreshCanvasPosition();            
 	  }
 	  if( e.touches.length == 2 ){
             //!TODO Test this and look at the method movePointInCenter
@@ -1295,11 +1296,13 @@ var IIPMooViewer = new Class({
 	  }
         },
 	'touchend': function(e){
+          e.preventDefault();
 	  // Update our tiles and navigation window
 	  if( _this.canvas.retrieve('tapstart') == 1 ){
 	    _this.canvas.eliminate('tapstart');
 	    _this.requestImages();
 	    _this.positionZone();
+            _this.fireEvent('move', [_this.view.x, _this.view.y]);
 	    //	    if(IIPMooViewer.sync){
 	    //IIPMooViewer.windows(this).each( function(el){ el.moveTo(_this.view.x,_this.view.); });
 	    // }
