@@ -916,7 +916,9 @@ var IIPMooViewer = new Class({
 	else el.zoomIn();
       });
     }
-
+    
+    // This zooming also changes x and y so we fire move event
+    this.fireEvent('move', [this.view.x, this.view.y]);
   },
 
 
@@ -1269,6 +1271,8 @@ var IIPMooViewer = new Class({
               _this.view.x = xAndY.x - Math.floor(_this.view.rotatedW/2);
               _this.view.y = xAndY.y - Math.floor(_this.view.rotatedH/2);
 	      _this.zoomIn();
+              // Thiw zoom also changes x and y so we fire move event.
+              _this.fireEvent('move', [_this.view.x, _this.view.y]);
 	    }
 	    else{
 	      var pos = _this.canvas.getPosition(_this.container);
