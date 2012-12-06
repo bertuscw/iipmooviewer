@@ -772,7 +772,7 @@ var IIPMooViewer = new Class({
    */
   checkBounds: function( x, y ) {
     
-    var rotation = this._getPositiveRotation();
+    var rotation = this.getPositiveRotation();
     
     var maxX = 0;
     var maxY = 0;
@@ -816,7 +816,7 @@ var IIPMooViewer = new Class({
   /* Nudge the view by a small amount
    */
   nudge: function( dx, dy ){
-    var rotation = this._getPositiveRotation();
+    var rotation = this.getPositiveRotation();
     
     var rdx, rdy;
     if (rotation % 360 == 0) {
@@ -1985,6 +1985,19 @@ var IIPMooViewer = new Class({
   },
   
   /**
+   * If rotation is < 0 returns its positive equivalent.
+   * 
+   */
+  getPositiveRotation: function() {
+    var rotation = this.view.rotation;
+    rotation = rotation % 360;
+    if (rotation < 0) {
+      rotation += 360;
+    }
+    return rotation;
+  },
+  
+  /**
    * Set canvas left and top.
    * 
    */
@@ -2018,7 +2031,7 @@ var IIPMooViewer = new Class({
    */
   _transformRotateXAndY: function(x, y, reverse) {
     
-    var rotation = this._getPositiveRotation();
+    var rotation = this.getPositiveRotation();
     
     var verticalDiff = 0;
     var horizontalDiff = 0;
@@ -2065,7 +2078,7 @@ var IIPMooViewer = new Class({
    */
   _transformRotateLeftAndTopForCss: function(left, top, reverse) {
     
-    var rotation = this._getPositiveRotation();
+    var rotation = this.getPositiveRotation();
     
     /* We do not move transform origin anymore.
     var transformOrigin = this.canvas.getStyle(this.CSSprefix+'transform-origin').replace('px', '').replace('px', '').split(' ');
@@ -2107,7 +2120,7 @@ var IIPMooViewer = new Class({
    * 
    */
   _transformRotateOverCanvasToOverImage: function (overCanvasX, overCanvasY) {
-    var rotation = this._getPositiveRotation();
+    var rotation = this.getPositiveRotation();
     
     var x, y;
     if (rotation % 360 == 0) {
@@ -2124,19 +2137,6 @@ var IIPMooViewer = new Class({
       y = this.hei - overCanvasX;
     }
     return {'x': x, 'y': y};
-  },
-  
-  /**
-   * If rotation is < 0 returns its positive equivalent.
-   * 
-   */
-  _getPositiveRotation: function() {
-    var rotation = this.view.rotation;
-    rotation = rotation % 360;
-    if (rotation < 0) {
-      rotation += 360;
-    }
-    return rotation;
   },
   
   /**
