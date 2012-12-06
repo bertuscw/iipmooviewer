@@ -1944,13 +1944,23 @@ var IIPMooViewer = new Class({
    * Get x and y relative to image by left and top of the canvas.
    *
    */
-  getXAndYByLeftAndTop: function(x, y) {
+  getXAndYByLeftAndTop: function() {
     var left = this.canvas.getStyle('left').toInt();
     var top = this.canvas.getStyle('top').toInt();
     var leftAndTop = this._transformRotateLeftAndTopForCss(left, top, true);
     var xAndY = this._transformRotateXAndY(-1 * leftAndTop.left, -1 * leftAndTop.top);
     
     return xAndY;
+  },
+  
+  /**
+   * Gets left and top for rotated canvas after the rotation.
+   *
+   */
+  getVisibleLeftAndTop: function() {
+    var left = this.canvas.getStyle('left').toInt();
+    var top = this.canvas.getStyle('top').toInt();
+    return this._transformRotateLeftAndTopForCss(left, top, true);
   },
   
   /**
