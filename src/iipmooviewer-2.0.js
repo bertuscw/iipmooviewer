@@ -1068,7 +1068,7 @@ var IIPMooViewer = new Class({
         }
         this.view.res -= 1;
     } else {
-        this.resolutions = new Array(this.num_resolutions);
+        this.resolutions = new Array();
         this.resolutions.push({w:tx,h:ty});
         this.view.res = 0;
         for( var i=1; i<this.num_resolutions; i++ ){
