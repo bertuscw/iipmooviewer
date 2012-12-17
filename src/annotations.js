@@ -127,7 +127,7 @@ IIPMooViewer.implement({
       var _this = this;
       this.annotationTip = new Tips( 'div.annotation', {
         className: 'tip', // We need this to force the tip in front of nav window
-	fixed: true,
+	fixed: false,
 	offset: {x:30,y:30},
 	hideDelay: 300,
 	link: 'chain',
