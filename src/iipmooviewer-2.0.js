@@ -1289,14 +1289,7 @@ var IIPMooViewer = new Class({
             var xMove = _this.touchstart.x - newXAndY.x;
             var yMove = _this.touchstart.y - newXAndY.y;            
             _this.checkBounds(_this.view.x + xMove, _this.view.y + yMove);
-            _this._refreshCanvasPosition();            
-	  }
-	  if( e.touches.length == 2 ){
-            //!TODO Test this and look at the method movePointInCenter
-	    var xx = Math.round( (e.touches[0].pageX+e.touches[1].pageX) / 2 ) + _this.view.x;
-	    var yy = Math.round( (e.touches[0].pageY+e.touches[1].pageY) / 2 ) + _this.view.y;
-	    var origin = xx + 'px,' + yy + 'px';
-	    _this.canvas.setStyle( this.CSSprefix+'transform-origin', origin );
+            _this._refreshCanvasPosition();
 	  }
         },
 	'touchend': function(e){
@@ -1323,7 +1316,7 @@ var IIPMooViewer = new Class({
 	  if( _this.canvas.retrieve('tapstart') == 1 ){
 	    _this.canvas.eliminate('tapstart');
 	    // Handle scale
-	    if( Math.abs(1-e.scale)>0.1 ){
+	    if( Math.abs(1-e.scale)>0.3 ){
 	      if( e.scale > 1 ) _this.zoomIn();
 	      else _this.zoomOut();
 	    }
