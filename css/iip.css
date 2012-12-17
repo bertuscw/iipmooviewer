@@ -136,7 +136,7 @@
   font-size: 8pt;
   line-height: 1.2em;
   z-index: 2;
-  position: relative;
+  position: absolute;
  -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
   border-radius: 0.5em;
@@ -144,6 +144,9 @@
   -webkit-box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
   -o-box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
   box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
+}
+.tip .tip {
+  width: 100px;
 }
 .tip h1 {
   font-size: 120%;
