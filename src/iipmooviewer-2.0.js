@@ -1178,7 +1178,6 @@ var IIPMooViewer = new Class({
     // Inject our canvas into the container, but events need to be added after injection
     this.canvas.inject( this.container );
     this.canvas.addEvents({
-      'mousewheel:throttle(75)': this.zoom.bind(this),
       'dblclick': this.zoom.bind(this),
       'mousedown': function(e){ var event = new DOMEvent(e); event.stop(); }
     });
@@ -1228,7 +1227,7 @@ var IIPMooViewer = new Class({
 	this.erase('tabindex');
 	this.blur();
       },
-      'mousewheel': function(e){ e.preventDefault(); }
+      'mousewheel:throttle(75)': this.zoom.bind(this)
     });
 
 
