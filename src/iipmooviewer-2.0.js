@@ -756,7 +756,7 @@ var IIPMooViewer = new Class({
   /* Scroll from a drag event on the tile canvas
    */
   scroll: function(e) {
-
+    
     var xAndY = this.getXAndYByLeftAndTop();
     this.moveTo(xAndY.x, xAndY.y);
 
@@ -1171,7 +1171,7 @@ var IIPMooViewer = new Class({
     // Create our main view drag object for our canvas.
     // Add synchronization via the Drag start hook
     this.touch = new Drag( this.canvas, {
-      onComplete: this.scroll.bind(this)
+      onDrag: this.scroll.bind(this)
     });
 
 
