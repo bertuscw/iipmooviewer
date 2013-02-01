@@ -1227,7 +1227,10 @@ var IIPMooViewer = new Class({
 	this.erase('tabindex');
 	this.blur();
       },
-      'mousewheel:throttle(75)': this.zoom.bind(this)
+      'mousewheel': function(e){ 
+        e.preventDefault();
+        _this.zoom(e);
+      }
     });
 
 
