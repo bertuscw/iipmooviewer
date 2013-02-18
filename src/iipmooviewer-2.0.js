@@ -1318,7 +1318,7 @@ var IIPMooViewer = new Class({
 	  if( _this.canvas.retrieve('tapstart') == 1 ){
 	    _this.canvas.eliminate('tapstart');
 	    // Handle scale
-	    if( Math.abs(1-e.scale)>0.1 ){
+	    if( Math.abs(1-e.scale)>0.3 ){
 	      if( e.scale > 1 ){
 		_this.zoomIn();
 		if(IIPMooViewer.sync){
