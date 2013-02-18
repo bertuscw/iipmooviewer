@@ -187,7 +187,7 @@ var IIPMooViewer = new Class({
 	this.units = {
 	  dims:   ["\'\'", "\'", "&deg"],
 	  orders: [ 1/3600, 1/60, 1 ],
-	  mults: [ 1 , 10 ,15, 30 ],
+	  mults: [1,10,15,30],
 	  factor: 3600
 	}
       }
@@ -1318,9 +1318,19 @@ var IIPMooViewer = new Class({
 	  if( _this.canvas.retrieve('tapstart') == 1 ){
 	    _this.canvas.eliminate('tapstart');
 	    // Handle scale
-	    if( Math.abs(1-e.scale)>0.3 ){
-	      if( e.scale > 1 ) _this.zoomIn();
-	      else _this.zoomOut();
+	    if( Math.abs(1-e.scale)>0.1 ){
+	      if( e.scale > 1 ){
+		_this.zoomIn();
+		if(IIPMooViewer.sync){
+		  IIPMooViewer.windows(_this).each( function(el){ el.zoomIn(); });
+		}
+	      }
+	      else{
+		_this.zoomOut();
+		if(IIPMooViewer.sync){
+                  IIPMooViewer.windows(_this).each( function(el){ el.zoomOut(); });
+                }
+	      }
 	    }
 	    // And rotation
 	    else if( Math.abs(e.rotation) > 10 ){
@@ -1328,6 +1338,9 @@ var IIPMooViewer = new Class({
 	      if( e.rotation > 0 ) r += _this.rotationStep % 360;
 	      else r -= _this.rotationStep % 360;
 	      _this.rotate(r);
+	      if(IIPMooViewer.sync){
+		IIPMooViewer.windows(_this).each( function(el){ el.rotate(r); });
+	      }
 	    }
 	  }
 	}
