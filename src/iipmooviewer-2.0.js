@@ -1072,8 +1072,8 @@ var IIPMooViewer = new Class({
         this.resolutions.push({w:tx,h:ty});
         this.view.res = 0;
         for( var i=1; i<this.num_resolutions; i++ ){
-          tx = Math.floor(tx/2);
-          ty = Math.floor(ty/2);
+          tx = Math.ceil(tx/2);
+          ty = Math.ceil(ty/2);
           this.resolutions.push({w:tx,h:ty});
           if( tx < this.view.w && ty < this.view.h ) this.view.res++;
         }
