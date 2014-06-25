@@ -60,6 +60,12 @@
       onLoad            Fired after the viewer is loaded
                         Signature: onLoad()
 
+      onBeforeZoom      Fired before zoom in, zoom out or zoom to is performed. 
+                        Signature: 
+                          onBeforeZoom(resolution)
+                        Arguments: 
+                          1. resolution - (integer) The resolution to which will be zoomed
+
       onZoom            Fired after zoom in, zoom out or zoom to is performed. 
                         Signature: 
                           onZoom(resolution)
@@ -114,10 +120,13 @@
                           1. width - (integer) The new width of the viewer
                           2. height - (integer) The new height of the viewer
 
-      onKeyPress      Fired when a key is pressed. After the build in key press handler.
+      onKeyPress        Fired when a key is pressed. After the build in key press handler.
                         Signature: onKeyPress(e)
                         Arguments: 
                           1. e - (DomEvent) Mootools dom event
+
+      onTilesLoaded     Fired after tiles are loaded
+                        Sinature: onTilesLoaded()
                         
 */
 
@@ -424,10 +433,13 @@ var IIPMooViewer = new Class({
       k = i + (j*xtiles);
 
       if( this.tiles.contains(k) ){
-	this.nTilesLoaded += this.images.length;
+        this.nTilesLoaded += this.images.length;
         if( this.showNavWindow ) this.refreshLoadBar();
-	if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', 'move' );
-	continue;
+        if( this.nTilesLoaded >= this.nTilesToLoad ) {
+          this.fireEvent('tilesLoaded');
+          this.canvas.setStyle( 'cursor', 'move' );
+        }
+        continue;
       }
 
       // Iterate over the number of layers we have
@@ -460,7 +472,10 @@ var IIPMooViewer = new Class({
 	     }
 	     this.nTilesLoaded++;
 	     if( this.showNavWindow ) this.refreshLoadBar();
-	     if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', 'move' );
+	     if( this.nTilesLoaded >= this.nTilesToLoad ) {
+             this.fireEvent('tilesLoaded');
+             this.canvas.setStyle( 'cursor', 'move' );
+         }
 	     this.tiles.push(id); // Add to our list of loaded tiles
 	  }.bind(this,tile,k),
 	  'error': function(){
@@ -952,6 +967,8 @@ var IIPMooViewer = new Class({
     if( r == this.view.res ) return;
 
     if( (r <= this.num_resolutions-1) && (r >= 0) ){
+
+      this.fireEvent('beforeZoom', r);
 
       // Calculates zooming factor by actual difference in resolutions.
       var factor = this.resolutions[r].w / this.resolutions[this.view.res].w;
