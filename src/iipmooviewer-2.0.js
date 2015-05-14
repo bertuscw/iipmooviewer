@@ -1738,20 +1738,15 @@ var IIPMooViewer = new Class({
         onComplete: function(transport){
           var response = transport || alert( "Error: No response from server " + this.server );
 
+          this.reload();
+          
           // Change our navigation image
-          if (this.navcontainer.getElement('img.navimage')) {
-            this.navcontainer.getElement('img.navimage').src =
+          if (this.container.getElement('div.navcontainer img.navimage')) {
+            this.container.getElement('div.navcontainer img.navimage').src =
               this.protocol.getThumbnailURL(this.server, image, this.navWin.w );
           }
-
-          this.reload();
-
-          // Change our navigation image
-          this.container.getElement('div.navcontainer img.navimage').src =
-          this.protocol.getThumbnailURL(this.server, image, this.navWin.w );
         
           this.fireEvent('imagechange', image);
-
         }.bind(this),
           onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
       } );
