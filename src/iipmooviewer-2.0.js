@@ -1260,7 +1260,6 @@ var IIPMooViewer = new Class({
       // Disable elastic scrolling and handle changes in orientation on mobile devices.
       // These events need to be added to the document body itself
       document.body.addEvents({
-	'touchmove': function(e){ e.preventDefault(); },
 	'orientationchange': function(){
 	   _this.container.setStyles({
 	     width: '100%',
