@@ -447,10 +447,11 @@ var IIPMooViewer = new Class({
       for(n=0;n<this.images.length;n++){
 
         var tile = new Element('img', {
+         alt: 'tile',
           'class': 'layer'+n,
           'styles': {
-	    left: i*this.tileSize.w,
-	    top: j*this.tileSize.h
+            left: i*this.tileSize.w,
+            top: j*this.tileSize.h
           }
         });
 	// Move this out of the main constructor to avoid DOM attribute bloat
