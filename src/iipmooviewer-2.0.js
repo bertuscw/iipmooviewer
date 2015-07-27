@@ -52,6 +52,7 @@
 	      viewport: object containing x, y, resolution, rotation of initial view
 	      winResize: whether view is reflowed on window resize. Default true
 	      preload: load extra surrounding tiles
+	      tileAltText: what is the alt text of the tiles. Default: 'tile'
 
    Note: Requires mootools version 1.4 or later <http://www.mootools.net>
        : The page MUST have a standard-compliant HTML declaration at the beginning
@@ -200,6 +201,12 @@ var IIPMooViewer = new Class({
 	  factor: 3600
 	}
       }
+    }
+    
+    if (options.tileAltText) {
+        this.tileAltText = options.tileAltText;
+    } else {
+        this.tileAltText = 'tile';
     }
 
 
@@ -447,7 +454,7 @@ var IIPMooViewer = new Class({
       for(n=0;n<this.images.length;n++){
 
         var tile = new Element('img', {
-         alt: 'tile',
+         alt: this.tileAltText,
           'class': 'layer'+n,
           'styles': {
             left: i*this.tileSize.w,
