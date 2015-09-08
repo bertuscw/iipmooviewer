@@ -1717,12 +1717,12 @@ var IIPMooViewer = new Class({
   /* Change our image and reload our view
    */
   changeImage: function( image ){
-
+      
     // Replace our image array
     this.images = [{ src:image, sds:"0,90", cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0 } ];
 
     // Send a new AJAX request for the metadata
-    if(this.protocol.getMetaData) {
+    if(this.protocol.getMetaData) {        
       this.protocol.getMetaData(function(result) {
         this.max_size = result.max_size;
         this.tileSize = result.tileSize;
@@ -1744,7 +1744,13 @@ var IIPMooViewer = new Class({
         url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
         onComplete: function(transport){
           var response = transport || alert( "Error: No response from server " + this.server );
-
+          
+          var result = this.protocol.parseMetaData(response);
+          
+          this.max_size = result.max_size;
+          this.tileSize = result.tileSize;
+          this.num_resolutions = result.num_resolutions;
+          
           this.reload();
           
           // Change our navigation image
